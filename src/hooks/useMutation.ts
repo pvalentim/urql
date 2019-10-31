@@ -5,6 +5,7 @@ import { useClient } from '../context';
 import { OperationResult, OperationContext } from '../types';
 import { CombinedError, createRequest } from '../utils';
 import { useImmediateState } from './useImmediateState';
+import { Client } from '../client';
 
 export interface UseMutationState<T> {
   fetching: boolean;
@@ -22,9 +23,10 @@ export type UseMutationResponse<T, V> = [
 ];
 
 export const useMutation = <T = any, V = object>(
-  query: DocumentNode | string
+  query: DocumentNode | string,
+  client?: Client
 ): UseMutationResponse<T, V> => {
-  const client = useClient();
+  const _client = useClient(client);
   const [state, setState] = useImmediateState<UseMutationState<T>>({
     fetching: false,
     error: undefined,
@@ -44,7 +46,7 @@ export const useMutation = <T = any, V = object>(
       const request = createRequest(query, variables as any);
 
       return pipe(
-        client.executeMutation(request, context || {}),
+        _client.executeMutation(request, context || {}),
         toPromise
       ).then(result => {
         const { data, error, extensions } = result;
@@ -52,7 +54,7 @@ export const useMutation = <T = any, V = object>(
         return result;
       });
     },
-    [client, query, setState]
+    [_client, query, setState]
   );
 
   return [state, executeMutation];
